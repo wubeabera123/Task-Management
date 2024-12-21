@@ -67,7 +67,9 @@ const TaskList: React.FC = () => {
         </Button>
       </Box>
       {loading ? (
-        <CircularProgress />
+        <Box display={"flex"} justifyContent={"center"} alignItems={"center"}>
+          <CircularProgress />
+        </Box>
       ) : tasks.length > 0 ? (
         <List>
           {tasks.map((task) => (
@@ -75,7 +77,9 @@ const TaskList: React.FC = () => {
           ))}
         </List>
       ) : (
-        <Typography>No tasks available.</Typography>
+        <Box display={"flex"} justifyContent={"center"} alignItems={"center"} padding={"10px"}>
+          <Typography>No tasks available.</Typography>
+        </Box>
       )}
 
       <Modal
@@ -90,11 +94,13 @@ const TaskList: React.FC = () => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: 400,
+            maxWidth: 400,
+            width: '100%',
             bgcolor: "background.paper",
             boxShadow: 24,
             p: 3,
             borderRadius: 2,
+            // paddingX: '10px'
           }}
         >
           <TaskForm onTaskCreated={handleTaskCreated} />

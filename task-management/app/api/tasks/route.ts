@@ -5,7 +5,12 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const tasks = await prisma.task.findMany();
+    const tasks = await prisma.task.findMany({
+      orderBy: {
+        updatedAt: 'desc', // Change to 'createdAt' if you want to sort by creation date
+      },
+    });
+
     return NextResponse.json(tasks, { status: 200 });
   } catch {
     return NextResponse.json({ error: 'Error fetching tasks' }, { status: 500 });

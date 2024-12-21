@@ -44,9 +44,9 @@ const TaskForm: React.FC<TaskFormProps> = ({ onTaskCreated, initialData }) => {
     <Box
       component="form"
       onSubmit={handleSubmit}
-      sx={{ mb: 4, display: 'flex', flexDirection: 'column', gap: 2 }}
+      sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 2 }}
     >
-      <Typography variant="h5">{initialData?.id ? 'Edit Task' : 'Add Task'}</Typography>
+      <Typography variant="h5" sx={{color: 'black', paddingY: '10px'}}>{initialData?.id ? 'Edit Task' : 'Add Task'}</Typography>
       <TextField
         label="Title"
         value={title}
@@ -60,7 +60,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onTaskCreated, initialData }) => {
         multiline
         rows={3}
       />
-      <Button type="submit" variant="contained" color="primary" disabled={loading}>
+      <Button type="submit" variant="contained" color="primary" disabled={loading} sx={{marginTop: '20px'}}>
         {loading ? 'Saving...' : initialData?.id ? 'Update Task' : 'Create Task'}
       </Button>
     </Box>
