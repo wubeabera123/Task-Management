@@ -103,7 +103,7 @@ const TaskList: React.FC = () => {
             // paddingX: '10px'
           }}
         >
-          <TaskForm onTaskCreated={handleTaskCreated} />
+          <TaskForm onTaskCreated={handleTaskCreated} onClose={() => setOpenModal(false)}/>
         </Box>
       </Modal>
     </Box>

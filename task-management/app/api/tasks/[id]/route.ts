@@ -20,15 +20,21 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const url = new URL(req.url);
-  const id = url.pathname.split('/').pop();
-
   try {
-    await prisma.task.delete({
+    const url = new URL(req.url);
+    const id = url.pathname.split('/').pop();
+
+    if (!id || isNaN(Number(id))) {
+      return NextResponse.json({ error: 'Invalid task ID' }, { status: 400 });
+    }
+
+    const deletedTask = await prisma.task.delete({
       where: { id: Number(id) },
     });
-    return NextResponse.json(null, { status: 204 });
-  } catch {
-    return NextResponse.json({ error: 'Error deleting task' }, { status: 500 });
+
+    return NextResponse.json(deletedTask, { status: 200 });
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 });
   }
 }

@@ -4,7 +4,7 @@ import TaskList from './components/TaskList';
 
 export default function Home() {
   return (
-    <Container sx={{marginTop:'60px'}}>
+    <Container sx={{marginTop:'60px',}}>
       <TaskList />
     </Container>
   );
