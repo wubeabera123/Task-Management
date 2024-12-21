@@ -1,35 +1,34 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query;
+export async function PUT(req: NextRequest) {
+  const url = new URL(req.url);
+  const id = url.pathname.split('/').pop();
+  const { title, description, completed } = await req.json();
 
-  if (req.method === 'PUT') {
-    // Update a task
-    const { title, description, completed } = req.body;
+  try {
+    const updatedTask = await prisma.task.update({
+      where: { id: Number(id) },
+      data: { title, description, completed },
+    });
+    return NextResponse.json(updatedTask, { status: 200 });
+  } catch {
+    return NextResponse.json({ error: 'Error updating task' }, { status: 500 });
+  }
+}
 
-    try {
-      const updatedTask = await prisma.task.update({
-        where: { id: Number(id) },
-        data: { title, description, completed },
-      });
-      return res.status(200).json(updatedTask);
-    } catch  {
-      return res.status(500).json({ error: 'Error updating task' });
-    }
-  } else if (req.method === 'DELETE') {
-    // Delete a task
-    try {
-      await prisma.task.delete({
-        where: { id: Number(id) },
-      });
-      return res.status(204).end();
-    } catch  {
-      return res.status(500).json({ error: 'Error deleting task' });
-    }
-  } else {
-    return res.setHeader('Allow', ['PUT', 'DELETE']).status(405).end(`Method ${req.method} Not Allowed`);
+export async function DELETE(req: NextRequest) {
+  const url = new URL(req.url);
+  const id = url.pathname.split('/').pop();
+
+  try {
+    await prisma.task.delete({
+      where: { id: Number(id) },
+    });
+    return NextResponse.json(null, { status: 204 });
+  } catch {
+    return NextResponse.json({ error: 'Error deleting task' }, { status: 500 });
   }
 }

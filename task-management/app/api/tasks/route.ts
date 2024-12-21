@@ -1,34 +1,30 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'GET') {
-    // Fetch all tasks
-    try {
-      const tasks = await prisma.task.findMany();
-      return res.status(200).json(tasks);
-    } catch  {
-      return res.status(500).json({ error: 'Error fetching tasks' });
-    }
-  } else if (req.method === 'POST') {
-    // Create a new task
-    const { title, description } = req.body;
+export async function GET() {
+  try {
+    const tasks = await prisma.task.findMany();
+    return NextResponse.json(tasks, { status: 200 });
+  } catch {
+    return NextResponse.json({ error: 'Error fetching tasks' }, { status: 500 });
+  }
+}
 
-    if (!title) {
-      return res.status(400).json({ error: 'Title is required' });
-    }
+export async function POST(req: NextRequest) {
+  const { title, description } = await req.json();
 
-    try {
-      const newTask = await prisma.task.create({
-        data: { title, description },
-      });
-      return res.status(201).json(newTask);
-    } catch  {
-      return res.status(500).json({ error: 'Error creating task' });
-    }
-  } else {
-    return res.setHeader('Allow', ['GET', 'POST']).status(405).end(`Method ${req.method} Not Allowed`);
+  if (!title) {
+    return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+  }
+
+  try {
+    const newTask = await prisma.task.create({
+      data: { title, description },
+    });
+    return NextResponse.json(newTask, { status: 201 });
+  } catch {
+    return NextResponse.json({ error: 'Error creating task' }, { status: 500 });
   }
 }
