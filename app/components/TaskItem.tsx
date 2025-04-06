@@ -13,12 +13,17 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import axios from "axios";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import TaskForm from "./TaskForm";
-import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
+import { FETCH_TASKS_REQUEST } from "@/app/redux/taskSlice";
 
 
-// import { useEffect } from 'react';
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/app/redux/store";
+import {
+  DELETE_TASK_REQUEST,
+  TOGGLE_TASK_REQUEST,
+} from "@/app/redux/taskSlice";
 
 interface TaskItemProps {
   task: {
@@ -27,60 +32,34 @@ interface TaskItemProps {
     description?: string;
     completed: boolean;
   };
-  onTaskUpdated: () => void;
+  // onTaskUpdated: () => void;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, onTaskUpdated }) => {
+const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
+  const dispatch = useDispatch<AppDispatch>();
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
-  const handleDelete = async () => {
-    try {
-      await axios.delete(`/api/tasks/${task.id}`);
-      onTaskUpdated();
-    } catch (error) {
-      console.error("Error deleting task:", error);
-    }
+  const handleDelete = () => {
+    dispatch({ type: DELETE_TASK_REQUEST, payload: task.id });
+    setOpenDeleteModal(false);
+    dispatch({ type: FETCH_TASKS_REQUEST }); // ✅ re-fetch after delete
   };
+  
 
-  const handleToggleComplete = async () => {
-    try {
-      await axios.put(`/api/tasks/${task.id}`, {
-        completed: !task.completed,
-      });
-      onTaskUpdated();
-    } catch (error) {
-      console.error("Error updating task:", error);
-    }
-  };
-
-  const taskStyle = {
-    textDecoration: task.completed ? "line-through" : "none",
-    color: task.completed ? "#ffffff" : "#333",
-    maxWidth: task.description ? "500px" : "",
-    width: task.description ? "100%" : "",
-    "@media (min-width: 399px)": {
-      maxWidth: task.description ? "200px" : "", // Small devices
-    },
-    "@media (min-width: 400px) and (max-width: 599)": {
-      maxWidth: task.description ? "300px" : "", // Small devices
-    },
-    "@media (min-width: 601px) and (max-width: 960px)": {
-      maxWidth: task.description ? "400px" : "", // Medium devices
-    },
-    "@media (min-width: 961px)": {
-      maxWidth: task.description ? "600px" : "", // Large devices
-    },
+  const handleToggleComplete = () => {
+    dispatch({ type: TOGGLE_TASK_REQUEST, payload: { id: task.id, completed: !task.completed } });
+    dispatch({ type: FETCH_TASKS_REQUEST }); // ✅ re-fetch after toggle
   };
 
   return (
     <>
       <ListItem
         sx={{
-          backgroundColor: task.completed ? "#9C9C9E" : "#F1F1F7", // Change this to your desired color
-          marginBottom: "10px", // Optional: Adds space between items
-          borderRadius: "5px", // Optional: Adds rounded corners
-          padding: "10px", // Optional: Adds padding inside the item
+          backgroundColor: task.completed ? "#9C9C9E" : "#F1F1F7",
+          marginBottom: "10px",
+          borderRadius: "5px",
+          padding: "10px",
         }}
         secondaryAction={
           <Box>
@@ -111,20 +90,17 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onTaskUpdated }) => {
         <ListItemText
           primary={task.title}
           secondary={task.description ?? ""}
-          sx={taskStyle}
-          // style={{
-          //   textDecoration: task.completed ? 'line-through' : 'none',
-          //   color: task.completed ? '#ffffff' : '#333',
-          //   maxWidth: task.description ? '500px' : '',
-          //   width: task.description ? '100%' : ''
-          // }}
+          sx={{
+            textDecoration: task.completed ? "line-through" : "none",
+            color: task.completed ? "#ffffff" : "#333",
+          }}
         />
       </ListItem>
+
+      {/* Edit Task Modal */}
       <Modal
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
-        aria-labelledby="edit-task-modal"
-        aria-describedby="edit-task-modal-description"
       >
         <Box
           sx={{
@@ -140,20 +116,21 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onTaskUpdated }) => {
           }}
         >
           <TaskForm
-            initialData={task} // Pass current task data to the form
+            initialData={task}
             onTaskCreated={() => {
               setOpenEditModal(false);
-              onTaskUpdated();
+              // onTaskUpdated();
+              dispatch({ type: FETCH_TASKS_REQUEST }); // ✅ use saga action
             }}
             onClose={() => setOpenEditModal(false)}
           />
         </Box>
       </Modal>
+
+      {/* Delete Confirmation Modal */}
       <Modal
         open={openDeleteModal}
         onClose={() => setOpenDeleteModal(false)}
-        aria-labelledby="edit-task-modal"
-        aria-describedby="edit-task-modal-description"
       >
         <Box
           sx={{
@@ -168,15 +145,26 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onTaskUpdated }) => {
             borderRadius: 2,
           }}
         >
-          <Box sx={{display: 'flex', justifyContent: 'end', alignItems: "center"}}>
-            <IconButton onClick={() => setOpenDeleteModal(false)} >
-            <CloseOutlinedIcon />
+          <Box sx={{ display: "flex", justifyContent: "end" }}>
+            <IconButton onClick={() => setOpenDeleteModal(false)}>
+              <CloseOutlinedIcon />
             </IconButton>
           </Box>
-          <Typography sx={{color: '#012000', display: 'flex', justifyContent: 'center', alignItems: "center", fontWeight: 'bold'}}>Are sure you want to delete this task?</Typography>
-          <Box sx={{marginTop: '20px', marginBottom: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px'}}>
-            <Button onClick={() => setOpenDeleteModal(false)} variant="outlined" sx={{paddingY: '1px'}}>Close</Button>
-            <Button onClick={handleDelete} variant="contained" sx={{backgroundColor: 'red', paddingY: '1px'}}>Delete</Button>
+          <Typography sx={{ textAlign: "center", fontWeight: "bold" }}>
+            Are you sure you want to delete this task?
+          </Typography>
+          <Box
+            sx={{
+              marginTop: "20px",
+              display: "flex",
+              justifyContent: "center",
+              gap: "20px",
+            }}
+          >
+            <Button variant="outlined" onClick={() => setOpenDeleteModal(false)}>Cancel</Button>
+            <Button variant="contained" onClick={handleDelete} sx={{ backgroundColor: "red" }}>
+              Delete
+            </Button>
           </Box>
         </Box>
       </Modal>
